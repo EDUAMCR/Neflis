@@ -22,6 +22,12 @@ namespace Neflis.Controllers
 
         public IActionResult Index()
         {
+            // 🔹 Cada vez que entro al selector, considero que estoy cambiando de perfil.
+            //    Por eso limpio cualquier perfil actual y estado de contenido.
+            HttpContext.Session.Remove("PerfilIdActual");
+            HttpContext.Session.Remove("PerfilEsInfantil");
+            HttpContext.Session.Remove("ContenidoDesbloqueado");
+
             var usuarioId = GetUsuarioId();
 
             // perfiles del usuario
@@ -51,7 +57,6 @@ namespace Neflis.Controllers
             return View(perfiles);
         }
 
-
         // /PerfilSelector/Usar/5
         public IActionResult Usar(int id)
         {
@@ -63,6 +68,7 @@ namespace Neflis.Controllers
             // guardamos en sesión
             HttpContext.Session.SetInt32("PerfilIdActual", perfil.PerfilId);
             HttpContext.Session.SetString("PerfilEsInfantil", perfil.EsInfantil ? "1" : "0");
+            HttpContext.Session.SetString("ContenidoDesbloqueado", "0"); // por seguridad
 
             return RedirectToAction("Index", "Catalogo");
         }

@@ -23,6 +23,8 @@ namespace Neflis.Models
         // Activo / Bloqueado
         public bool EstaActivo { get; set; } = true;
 
+        public string? ResetPasswordToken { get; set; }
+        public DateTime? ResetPasswordTokenExpira { get; set; }
         // navegación
         public ICollection<Perfil> Perfiles { get; set; }
         public ICollection<SuscripcionUsuario> Suscripciones { get; set; }

@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -10,6 +12,19 @@
     <link rel="stylesheet" href="~/css/site-custom.css" asp-append-version="true" />
 </head>
 <body class="@ViewData["BodyClass"]">
+    @{
+        // --- Estado de autenticación y perfil ---
+        bool autenticado = User?.Identity?.IsAuthenticated ?? false;
+        int? perfilActualId = null;
+        bool perfilEsInfantil = false;
+
+        if (autenticado)
+        {
+            perfilActualId = Context.Session.GetInt32("PerfilIdActual");
+            perfilEsInfantil = Context.Session.GetString("PerfilEsInfantil") == "1";
+        }
+    }
+
     <header>
         <nav class="navbar navbar-expand-lg" style="background:#221f1f;">
             <div class="container-fluid">
@@ -24,20 +39,57 @@
 
                 <div class="collapse navbar-collapse" id="mainNavbarContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        @if (autenticado)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="Catalogo" asp-action="Index">Catálogo</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="PerfilSelector" asp-action="Index">Perfiles</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="MiLista" asp-action="Index">Mi lista</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="Suscripciones" asp-action="MiPlan">Mi plan</a>
-                            </li>
+                            if (perfilActualId == null)
+                            {
+                                <!-- 👇 Usuario logueado pero SIN perfil seleccionado:
+                                     solo mostramos Perfiles + Salir -->
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="PerfilSelector" asp-action="Index">
+                                        Perfiles
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <!-- 👇 Usuario logueado y CON perfil seleccionado:
+                                     mostramos todo el menú -->
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Catalogo" asp-action="Index">
+                                        Catálogo
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="PerfilSelector" asp-action="Index">
+                                        Perfiles
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="MiLista" asp-action="Index">
+                                        Mi lista
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Suscripciones" asp-action="MiPlan">
+                                        Mi plan
+                                    </a>
+                                </li>
+
+                                @* Erótica solo si el perfil NO es infantil *@
+                                @if (!perfilEsInfantil)
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link text-danger"
+                                           asp-controller="ContenidoSeguro"
+                                           asp-action="Index">
+                                            Erótica
+                                        </a>
+                                    </li>
+                                }
+                            }
+
+                            <!-- Botón Salir siempre que esté autenticado -->
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-link nav-link text-light" style="text-decoration:none;">

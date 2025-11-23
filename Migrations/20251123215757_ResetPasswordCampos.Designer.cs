@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Neflis.Data;
 
@@ -11,9 +12,11 @@ using Neflis.Data;
 namespace Neflis.Migrations
 {
     [DbContext(typeof(NeflisDbContext))]
-    partial class NeflisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251123215757_ResetPasswordCampos")]
+    partial class ResetPasswordCampos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

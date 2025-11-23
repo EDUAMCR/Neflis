@@ -141,20 +141,38 @@ namespace Neflis.Controllers
             return RedirectToAction("Index", "PerfilSelector");
         }
 
-      
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
             var usuarioId = GetUsuarioId();
-            var perfil = _context.Perfiles.FirstOrDefault(p => p.PerfilId == id && p.UsuarioId == usuarioId);
-            if (perfil != null)
+            var perfil = _context.Perfiles
+                .FirstOrDefault(p => p.PerfilId == id && p.UsuarioId == usuarioId);
+
+            if (perfil == null)
             {
-                _context.Perfiles.Remove(perfil);
-                _context.SaveChanges();
+                // nada que borrar
+                return RedirectToAction("Index", "PerfilSelector");
             }
+
+            // 1) Borrar calificaciones del perfil
+            var calificaciones = _context.CalificacionesContenido
+                .Where(c => c.PerfilId == id);
+            _context.CalificacionesContenido.RemoveRange(calificaciones);
+
+            // 2) (Opcional pero recomendado) Borrar "Mi lista" del perfil si la tabla tiene PerfilId
+            var miLista = _context.MiLista
+                .Where(m => m.PerfilId == id);
+            _context.MiLista.RemoveRange(miLista);
+
+            // 3) Borrar el perfil
+            _context.Perfiles.Remove(perfil);
+
+            _context.SaveChanges();
 
             return RedirectToAction("Index", "PerfilSelector");
         }
+
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Neflis.Data;
 
@@ -11,9 +12,11 @@ using Neflis.Data;
 namespace Neflis.Migrations
 {
     [DbContext(typeof(NeflisDbContext))]
-    partial class NeflisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251123211828_AjustarCascadePerfilCalificaciones")]
+    partial class AjustarCascadePerfilCalificaciones
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -366,12 +369,6 @@ namespace Neflis.Migrations
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ResetPasswordToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ResetPasswordTokenExpira")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Rol")
                         .IsRequired()

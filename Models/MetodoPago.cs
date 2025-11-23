@@ -9,9 +9,12 @@ namespace Neflis.Models
 
         public int UsuarioId { get; set; }
 
+        [Required]
         public string Tipo { get; set; } = "Tarjeta";
 
         // guardamos enmascarado
+        [Required]
+        [RegularExpression(@"^\d{4}$", ErrorMessage = "Ingrese exactamente 4 dígitos.")]
         public string NumeroEnmascarado { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La fecha de vencimiento es obligatoria")]

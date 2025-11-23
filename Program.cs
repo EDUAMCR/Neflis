@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Neflis.Data;
+using Neflis.Models;
+using Neflis.Services;
 
 namespace Neflis
 {
@@ -17,6 +19,8 @@ namespace Neflis
             builder.Services.AddDbContext<NeflisDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+
             // Autenticación por cookies
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
@@ -25,7 +29,18 @@ namespace Neflis
                     options.AccessDeniedPath = "/Account/AccessDenied";
                 });
 
-            // Session (tiene que ir ANTES de builder.Build())
+            // Email settings
+            builder.Services.Configure<EmailSettings>(
+                builder.Configuration.GetSection("EmailSettings"));
+
+            // Servicio de correo
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
+
+            // ?? Necesario para leer la sesión desde _Layout:
+            builder.Services.AddHttpContextAccessor();
+
+            // Session
             builder.Services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);

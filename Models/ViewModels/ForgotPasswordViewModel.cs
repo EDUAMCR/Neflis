@@ -2,7 +2,7 @@
 
 namespace Neflis.Models.ViewModels
 {
-    public class RecuperarPasswordViewModel
+    public class ForgotPasswordViewModel
     {
         [Required]
         [EmailAddress]
