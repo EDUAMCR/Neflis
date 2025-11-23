@@ -1,0 +1,59 @@
+﻿@model IEnumerable<Neflis.Models.Perfil>
+@{
+    ViewData["Title"] = "Seleccionar perfil";
+    var maxPerfiles = ViewBag.MaxPerfiles is int m ? m : 1;
+    var totalPerfiles = Model.Count();
+}
+
+<div class="container page-shell py-5">
+    <h2 class="mb-4">Selecciona un perfil</h2>
+
+    <div class="profiles-grid">
+        @foreach (var p in Model)
+        {
+            <div class="profile-card">
+                <div class="profile-avatar">
+                    @if (!string.IsNullOrWhiteSpace(p.AvatarUrl))
+                    {
+                        <img src="@p.AvatarUrl" alt="@p.NombrePerfil" />
+                    }
+                    else
+                    {
+                        <span class="avatar-letter">
+                            @(string.IsNullOrEmpty(p.NombrePerfil) ? "P" : p.NombrePerfil.Substring(0, 1).ToUpper())
+                        </span>
+                    }
+                </div>
+                <h5 class="profile-name">@p.NombrePerfil</h5>
+                <p class="profile-type">
+                    @(p.EsInfantil ? "Perfil infantil" : "Perfil estándar")
+                </p>
+
+                <a asp-action="Usar"
+                   asp-route-id="@p.PerfilId"
+                   class="btn btn-neflis-primary w-100 mb-2">
+                    Usar este perfil
+                </a>
+
+                <form asp-controller="Perfiles" asp-action="Delete" method="post" class="d-grid">
+                    <input type="hidden" name="id" value="@p.PerfilId" />
+                    <button type="submit" class="btn btn-outline-danger" style="border-radius:999px;">
+                        Eliminar
+                    </button>
+                </form>
+            </div>
+        }
+
+        @* tarjeta de “nuevo” solo si no superó el plan *@
+        @if (totalPerfiles < maxPerfiles)
+        {
+            <div class="profile-card profile-card-add">
+                <div class="profile-add-circle">+</div>
+                <h5>Nuevo perfil</h5>
+                <a asp-controller="Perfiles" asp-action="Create" class="btn btn-dark w-100" style="border-radius:999px;">
+                    Crear perfil
+                </a>
+            </div>
+        }
+    </div>
+</div>

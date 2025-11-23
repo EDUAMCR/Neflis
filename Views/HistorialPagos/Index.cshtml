@@ -1,0 +1,29 @@
+﻿@model IEnumerable<Neflis.Models.HistorialPago>
+
+@{
+    ViewData["Title"] = "Historial de pagos";
+}
+
+<h2>Historial de pagos</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Monto</th>
+            <th>Estado</th>
+            <th>Método</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.FechaPago.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>₡ @p.Monto</td>
+                <td>@p.Estado</td>
+                <td>@p.Metodo</td>
+            </tr>
+        }
+    </tbody>
+</table>

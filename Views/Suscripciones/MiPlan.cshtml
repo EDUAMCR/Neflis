@@ -1,0 +1,67 @@
+﻿@model Neflis.Models.SuscripcionUsuario
+@{
+    ViewData["Title"] = "Mi plan";
+    var plan = ViewBag.Plan as Neflis.Models.PlanSuscripcion;
+    bool tieneMetodo = ViewBag.TieneMetodoPago is bool b && b;
+    var msg = TempData["Mensaje"] as string;
+    var msgErr = TempData["MensajeError"] as string;
+}
+
+<h2 class="mb-4">Mi plan</h2>
+
+@if (!string.IsNullOrEmpty(msg) && !msg.Contains("No tienes una suscripción activa"))
+{
+    <div class="alert alert-success">@msg</div>
+}
+@if (!string.IsNullOrEmpty(msgErr))
+{
+    <div class="alert alert-danger">@msgErr</div>
+}
+
+@if (plan == null)
+{
+    <p>No tienes un plan activo.</p>
+    <a asp-action="Planes" class="btn btn-primary">Ver planes</a>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h4>@plan.NombrePlan</h4>
+            <p><strong>₡ @plan.Precio</strong></p>
+            <p>Estado: @Model.Estado</p>
+            <p>Inicio: @Model.FechaInicio.ToString("dd/MM/yyyy")</p>
+            @if (Model.FechaFin != null)
+            {
+                <p>Fin: @Model.FechaFin?.ToString("dd/MM/yyyy")</p>
+            }
+        </div>
+    </div>
+
+    @if (Model.Estado == "Pendiente")
+    {
+        if (tieneMetodo)
+        {
+            <form asp-action="Confirmar" method="post" class="d-inline">
+                <button type="submit" class="btn btn-success me-2">Confirmar suscripción</button>
+            </form>
+        }
+        else
+        {
+            <a asp-controller="MetodosPago" asp-action="Create" asp-route-returnUrl="/Suscripciones/MiPlan"
+               class="btn btn-primary me-2">
+                Agregar método de pago
+            </a>
+        }
+
+        <form asp-action="Cancelar" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-danger">Cancelar</button>
+        </form>
+    }
+    else if (Model.Estado == "Activa")
+    {
+        <form asp-action="Cancelar" method="post">
+            <button type="submit" class="btn btn-danger">Cancelar suscripción</button>
+        </form>
+    }
+}

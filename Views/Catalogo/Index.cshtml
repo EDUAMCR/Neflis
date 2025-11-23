@@ -1,0 +1,455 @@
+﻿@model IEnumerable<Neflis.Models.Contenido>
+
+@{
+    ViewData["Title"] = "Catálogo";
+
+    // Agrupar por género para hacer carruseles estilo Netflix
+    var grupos = Model?
+        .Where(c => !string.IsNullOrEmpty(c.Genero))
+        .GroupBy(c => c.Genero)
+        .OrderBy(c => c.Key)
+        ?? Enumerable.Empty<IGrouping<string, Neflis.Models.Contenido>>();
+
+    // Valores actuales de los filtros
+    string buscar = ViewBag.Buscar as string ?? "";
+    string generoActual = ViewBag.GeneroActual as string ?? "";
+    var generos = ViewBag.Generos as IEnumerable<string> ?? Enumerable.Empty<string>();
+}
+
+<style>
+    /* =========================================================
+           TÍTULOS (Catálogo y géneros)
+           ========================================================= */
+
+    .catalogo-titulo,
+    .catalogo-genero-titulo {
+        font-weight: 700;
+        text-shadow: none;
+    }
+
+    .catalogo-titulo {
+        font-size: 1.6rem;
+    }
+
+    .catalogo-genero-titulo {
+        font-size: 1.1rem;
+        margin-top: 1.5rem;
+        margin-bottom: .55rem;
+    }
+
+    .catalogo-animado {
+        display: inline-block;
+        background: linear-gradient(90deg,#e50914,#f5c518,#21d07a,#1e90ff,#e50914);
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: catalogoGradient 6s linear infinite;
+    }
+
+    @@keyframes catalogoGradient {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    /* =========================================================
+           FILTROS (buscar, género, botón filtrar, botón azar)
+           ========================================================= */
+
+    .catalogo-input {
+        background: #1f1f1f;
+        border: 1px solid #333;
+        color: #f5f5f1;
+    }
+
+        .catalogo-input::placeholder {
+            color: #777;
+        }
+
+        .catalogo-input:focus {
+            border-color: #0077b6;
+            box-shadow: 0 0 0 0.1rem rgba(0,119,182,.5);
+        }
+
+    .btn-filtrar {
+        background: #0077b6;
+        border: none;
+        font-weight: 600;
+        color: white;
+    }
+
+        .btn-filtrar:hover {
+            background: #0096c7;
+        }
+
+    .btn-azar {
+        background: linear-gradient(90deg,#e50914,#ff4b2b);
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 0.375rem;
+        padding: 0.45rem 0.75rem;
+        height: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .35rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,.4);
+    }
+
+        .btn-azar:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+        }
+
+    /* =========================================================
+           TARJETAS DE CONTENIDO
+           ========================================================= */
+
+    .catalogo-card {
+        min-width: 300px;
+        background: rgba(191,10,28,.80);
+        border-radius: 14px;
+        padding: 0.8rem;
+        margin-right: 1rem;
+        /* box-shadow: 0 10px 30px rgba(0, 0, 0, .8); */
+        display: flex;
+        flex-direction: column;
+        transition: transform .2s ease, box-shadow .2s ease;
+        border: 1px solid rgba(4,70,71,0.05);
+    }
+
+        .catalogo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0,0,0,.9);
+        }
+
+    .catalogo-title {
+        font-weight: 600;
+        font-size: 1rem;
+        color: #ffffff;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        margin-bottom: 0.4rem;
+    }
+
+    .catalogo-poster {
+        border-radius: 10px;
+        overflow: hidden;
+        background: #000;
+        margin-bottom: 0.45rem;
+        height: 170px;
+    }
+
+        .catalogo-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+    /* Sinopsis (ahora SIEMPRE visible) */
+    .catalogo-descripcion {
+        margin-top: .45rem;
+        font-size: 0.78rem;
+        color: #fdfdfd;
+        max-height: 5.2rem; /* limita un poco la altura */
+        overflow-y: auto; /* scroll si es muy larga */
+    }
+
+    .catalogo-meta {
+        font-size: 0.8rem;
+        color: #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .35rem;
+        margin-top: 0.4rem;
+    }
+
+    .catalogo-chip {
+        border-radius: 999px;
+        border: 1px solid #666;
+        padding: 0.05rem 0.45rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #f5f5f1;
+    }
+
+    .catalogo-actions {
+        margin-top: .45rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .catalogo-btn-play {
+        background: #fff;
+        color: #000;
+        border: none;
+        font-weight: 600;
+        padding-inline: .6rem;
+    }
+
+        .catalogo-btn-play:hover {
+            background: #e5e5e5;
+        }
+
+    .catalogo-btn-lista {
+        background: #e50914;
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        padding-inline: .55rem;
+    }
+
+        .catalogo-btn-lista:hover {
+            filter: brightness(1.1);
+        }
+
+    /* =========================================================
+           SECCIONES POR GÉNERO + CARRUSEL CON FLECHAS
+           ========================================================= */
+
+    .catalogo-seccion {
+        margin-bottom: 0.9rem;
+        padding-bottom: 0.9rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .catalogo-scroll-wrapper {
+        position: relative;
+    }
+
+    .catalogo-scroll {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 0.2rem 2.4rem 0.75rem 2.4rem;
+        scrollbar-width: none;
+    }
+
+        .catalogo-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+    .catalogo-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        border: none;
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        font-size: 1.1rem;
+        padding: 0;
+    }
+
+    .catalogo-arrow-left {
+        left: 4px;
+    }
+
+    .catalogo-arrow-right {
+        right: 4px;
+    }
+
+    .catalogo-scroll-wrapper.no-scroll .catalogo-arrow {
+        display: none;
+    }
+</style>
+
+<div class="px-4">
+
+    <!-- ===================== TÍTULO PRINCIPAL ===================== -->
+    <div class="row">
+        <div class="col-12">
+            <h2 class="catalogo-titulo catalogo-animado mb-3" style="margin-top: 10px;">
+                Catálogo
+            </h2>
+        </div>
+    </div>
+
+    <!-- ===================== FILTROS + BOTÓN AZAR ===================== -->
+    <div class="row align-items-center g-3 mb-2">
+        <div class="col-12 col-md-4 col-lg-4">
+            <input name="buscar"
+                   form="formCatalogoFiltros"
+                   value="@buscar"
+                   class="form-control catalogo-input"
+                   placeholder="Buscar por título, actor, etc..." />
+        </div>
+
+        <div class="col-12 col-md-4 col-lg-4">
+            <select name="genero"
+                    form="formCatalogoFiltros"
+                    class="form-select catalogo-input">
+                <option value="">-- Todos los géneros --</option>
+                @foreach (var g in generos)
+                {
+                    <option value="@g" selected="@(generoActual == g)">
+                        @g
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-12 col-md-4 col-lg-4 text-md-end">
+            <a asp-action="Aleatorio" class="btn btn-azar w-100 w-md-auto">
+                🎲 Reproducir algo al azar
+            </a>
+        </div>
+    </div>
+
+    <form id="formCatalogoFiltros" method="get">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 mt-1">
+                <button type="submit" class="btn btn-filtrar w-100">
+                    Filtrar
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div style="margin-bottom: 20px;"></div>
+
+    <!-- ===================== CATÁLOGO POR GÉNERO ===================== -->
+    @if (!grupos.Any())
+    {
+        <div class="alert alert-warning">No se encontraron contenidos.</div>
+    }
+    else
+    {
+        var seccionIndex = 0;
+
+        foreach (var grupo in grupos)
+        {
+            var scrollId = $"scroll-{seccionIndex++}";
+
+            <div class="catalogo-seccion">
+                <h4 class="catalogo-genero-titulo catalogo-animado">@grupo.Key</h4>
+
+                <div class="catalogo-scroll-wrapper">
+                    <button type="button"
+                            class="catalogo-arrow catalogo-arrow-left"
+                            data-target="@scrollId">
+                        &#10094;
+                    </button>
+
+                    <div class="catalogo-scroll" id="@scrollId">
+                        @foreach (var item in grupo)
+                        {
+                            <div class="catalogo-card">
+                                <!-- 1. Título -->
+                                <div class="catalogo-title" title="@item.Titulo">
+                                    @item.Titulo
+                                </div>
+
+                                <!-- 2. Imagen -->
+                                <div class="catalogo-poster">
+                                    @if (!string.IsNullOrEmpty(item.UrlPortada))
+                                    {
+                                        <img src="@item.UrlPortada"
+                                             alt="@item.Titulo"
+                                             class="img-fluid rounded"
+                                             style="width:100%; height:100%; object-fit:cover;" />
+                                    }
+                                </div>
+
+                                <!-- 3. Sinopsis SIEMPRE visible -->
+                                @if (!string.IsNullOrWhiteSpace(item.Sinopsis))
+                                {
+                                    <div class="catalogo-descripcion">
+                                        @item.Sinopsis
+                                    </div>
+                                }
+
+                                <!-- 4. Clasificación / género / año -->
+                                <div class="catalogo-meta">
+                                    <span class="catalogo-chip">@item.Clasificacion</span>
+
+                                    @if (!string.IsNullOrEmpty(item.Genero))
+                                    {
+                                        <span>@item.Genero</span>
+                                    }
+                                    @if (item.Anio != 0)
+                                    {
+                                        <span>@item.Anio</span>
+                                    }
+                                </div>
+
+                                <!-- 5. Botones finales -->
+                                <div class="catalogo-actions">
+                                    <a asp-action="Detalle"
+                                       asp-route-id="@item.ContenidoId"
+                                       class="btn btn-sm catalogo-btn-play">
+                                        ▶ Ver más
+                                    </a>
+
+                                    <a asp-controller="MiLista"
+                                       asp-action="Agregar"
+                                       asp-route-id="@item.ContenidoId"
+                                       class="btn btn-sm catalogo-btn-lista">
+                                        + Lista
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <button type="button"
+                            class="catalogo-arrow catalogo-arrow-right"
+                            data-target="@scrollId">
+                        &#10095;
+                    </button>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Flechas izquierda / derecha para cada carrusel
+        document.querySelectorAll('.catalogo-arrow')
+            .forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.getAttribute('data-target');
+                    const scroll = document.getElementById(targetId);
+                    if (!scroll) return;
+
+                    const step = 300;
+                    const direction = btn.classList.contains('catalogo-arrow-left') ? -1 : 1;
+
+                    scroll.scrollBy({
+                        left: direction * step,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+        // Ocultar flechas si el carrusel no tiene overflow
+        document.querySelectorAll('.catalogo-scroll').forEach(sc => {
+            if (sc.scrollWidth <= sc.clientWidth + 5) {
+                const wrapper = sc.closest('.catalogo-scroll-wrapper');
+                if (wrapper) wrapper.classList.add('no-scroll');
+            }
+        });
+    </script>
+}

@@ -1,0 +1,32 @@
+﻿@model IEnumerable<Neflis.Models.Perfil>
+
+<h2>Mis perfiles</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Crear perfil</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Infantil</th>
+            <th>Avatar</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.NombrePerfil</td>
+                <td>@(item.EsInfantil ? "Sí" : "No")</td>
+                <td>@item.AvatarUrl</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.PerfilId">Editar</a> |
+                    <a asp-action="Delete" asp-route-id="@item.PerfilId">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

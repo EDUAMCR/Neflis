@@ -1,0 +1,334 @@
+﻿@model Neflis.Models.Contenido
+
+@{
+    ViewData["Title"] = "Detalle de contenido";
+    var comentarios = ViewBag.Comentarios as IEnumerable<Neflis.Models.ComentarioContenido> ?? Enumerable.Empty<Neflis.Models.ComentarioContenido>();
+    double promedio = ViewBag.Promedio ?? 0.0;
+    int total = ViewBag.TotalCalificaciones ?? 0;
+    int miCalif = ViewBag.MiCalificacion ?? 0;
+}
+
+<style>
+    /* =========================
+           OVERLAY / MODAL DETALLE
+           ========================= */
+    .detalle-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .78);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1080; /* por encima del navbar */
+        padding: 1.5rem;
+    }
+
+    .detalle-shell {
+        background: radial-gradient(circle at top, #2b2b2b 0, #050505 55%);
+        color: #f5f5f1;
+        padding: 1.75rem 2rem;
+        border-radius: 18px;
+        box-shadow: 0 26px 60px rgba(0, 0, 0, .95);
+        max-width: 1100px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .detalle-close-btn {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        border: none;
+        background: rgba(0, 0, 0, .6);
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        cursor: pointer;
+    }
+
+        .detalle-close-btn:hover {
+            background: rgba(229, 9, 20, .9);
+        }
+
+    /* =========================
+           CABECERA
+           ========================= */
+    .detalle-titulo {
+        font-size: 1.9rem;
+        font-weight: 700;
+        margin-bottom: .35rem;
+    }
+
+    .detalle-sub {
+        font-size: 0.9rem;
+        color: #d0d0d0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        align-items: center;
+    }
+
+    .detalle-chip {
+        border-radius: 999px;
+        border: 1px solid #555;
+        padding: 0.15rem 0.6rem;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .detalle-rating-resumen {
+        color: #f5c518;
+        font-size: 0.9rem;
+    }
+
+    /* =========================
+           CONTENIDO
+           ========================= */
+    .detalle-sinopsis {
+        margin-top: 1rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: #e0e0e0;
+    }
+
+    .detalle-poster {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .8);
+    }
+
+    .detalle-actions .btn {
+        font-weight: 600;
+    }
+
+    .detalle-actions .btn-play {
+        background: #fff;
+        color: #000;
+        border: none;
+    }
+
+        .detalle-actions .btn-play:hover {
+            background: #e5e5e5;
+        }
+
+    .detalle-actions .btn-lista {
+        background: #e50914;
+        color: #fff;
+        border: none;
+    }
+
+        .detalle-actions .btn-lista:hover {
+            filter: brightness(1.1);
+        }
+
+    /* =========================
+           ESTRELLAS DE CALIFICACIÓN
+           ========================= */
+    .detalle-rating {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .rating-stars {
+        display: inline-flex;
+        flex-direction: row-reverse; /* para pintar de izquierda a derecha */
+        gap: 0.2rem;
+        cursor: pointer;
+    }
+
+        .rating-stars input[type="radio"] {
+            display: none;
+        }
+
+        .rating-stars label {
+            font-size: 1.6rem;
+            color: #444;
+            transition: color .15s ease;
+        }
+
+            .rating-stars label:hover,
+            .rating-stars label:hover ~ label {
+                color: #ffc107;
+            }
+
+        .rating-stars input[type="radio"]:checked ~ label {
+            color: #ffc107;
+        }
+
+    /* =========================
+           COMENTARIOS
+           ========================= */
+    .detalle-comentario-card {
+        background: #111;
+        border: 1px solid #333;
+        color: #f5f5f1;
+    }
+</style>
+
+<div class="detalle-overlay">
+    <div class="detalle-shell mt-2">
+        <!-- Botón cerrar -->
+        <button type="button" class="detalle-close-btn" id="btnCerrarDetalle" aria-label="Cerrar">
+            ✕
+        </button>
+
+        <div class="row g-4">
+            <!-- Poster -->
+            <div class="col-md-4">
+                @if (!string.IsNullOrEmpty(Model.UrlPortada))
+                {
+                    <div class="detalle-poster">
+                        <img src="@Model.UrlPortada"
+                             alt="@Model.Titulo"
+                             class="img-fluid" />
+                    </div>
+                }
+            </div>
+
+            <!-- Info principal -->
+            <div class="col-md-8">
+                <div class="detalle-titulo">@Model.Titulo</div>
+
+                <div class="detalle-sub mb-2">
+                    @if (Model.Anio != 0)
+                    {
+                        <span>@Model.Anio</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Genero))
+                    {
+                        <span>@Model.Genero</span>
+                    }
+                    <span class="detalle-chip">@Model.Clasificacion</span>
+                    <span class="detalle-rating-resumen">
+                        ★ @promedio.ToString("0.0") (@total)
+                    </span>
+                </div>
+
+                <div class="detalle-sinopsis">
+                    @Model.Sinopsis
+                </div>
+
+                <div class="detalle-actions d-flex flex-wrap gap-2 mt-3 mb-2">
+                    <button class="btn btn-play">
+                        ▶ Reproducir
+                    </button>
+
+                    <a asp-controller="MiLista"
+                       asp-action="Agregar"
+                       asp-route-id="@Model.ContenidoId"
+                       class="btn btn-lista">
+                        + Agregar a mi lista
+                    </a>
+
+                    <a asp-action="Aleatorio"
+                       class="btn btn-outline-light">
+                        🎲 Algo al azar
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-controller="Catalogo"
+                       class="btn btn-outline-secondary ms-md-auto">
+                        Volver al catálogo
+                    </a>
+                </div>
+
+                <!-- Calificación con estrellas -->
+                <div class="detalle-rating">
+                    <div>
+                        Calificación promedio:
+                        <strong>@promedio.ToString("0.0")</strong>
+                        (@total calificación(es))
+                    </div>
+
+                    <form asp-action="Calificar"
+                          method="post"
+                          class="mt-2 d-flex flex-wrap gap-2 align-items-center">
+                        <input type="hidden" name="contenidoId" value="@Model.ContenidoId" />
+                        <span>Tu calificación:</span>
+
+                        <div class="rating-stars">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <input type="radio"
+                                       id="estrella-@i"
+                                       name="estrellas"
+                                       value="@i"
+                                       @(i == miCalif ? "checked" : "") />
+                                <label for="estrella-@i">★</label>
+                            }
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            Guardar
+                        </button>
+                    </form>
+
+                    @if (TempData["Mensaje"] != null)
+                    {
+                        <div class="alert alert-success mt-2">@TempData["Mensaje"]</div>
+                    }
+                    @if (TempData["MensajeError"] != null)
+                    {
+                        <div class="alert alert-danger mt-2">@TempData["MensajeError"]</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-secondary mt-4" />
+
+        <!-- COMENTARIOS -->
+        <h4 class="mt-3 mb-2">Comentarios</h4>
+
+        <form asp-action="AgregarComentario" method="post" class="mb-3">
+            <input type="hidden" name="contenidoId" value="@Model.ContenidoId" />
+            <div class="mb-2">
+                <textarea name="texto"
+                          class="form-control"
+                          rows="3"
+                          placeholder="Escribe tu comentario..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                Comentar
+            </button>
+        </form>
+
+        @if (comentarios.Any())
+        {
+            <ul class="list-group">
+                @foreach (var c in comentarios)
+                {
+                    <li class="list-group-item detalle-comentario-card">
+                        <div class="d-flex justify-content-between">
+                            <strong>Usuario @c.UsuarioId</strong>
+                            <small>@c.Fecha.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                        <p class="mb-0">@c.Texto</p>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted">Aún no hay comentarios.</p>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Botón cerrar: vuelve al catálogo
+        document.getElementById("btnCerrarDetalle")
+            ?.addEventListener("click", function () {
+                window.location.href = "@Url.Action("Index", "Catalogo")";
+            });
+    </script>
+}

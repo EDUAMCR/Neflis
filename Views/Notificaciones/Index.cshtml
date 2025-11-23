@@ -1,0 +1,23 @@
+﻿@model IEnumerable<Neflis.Models.Notificacion>
+
+<h2>Notificaciones</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Asunto</th>
+            <th>Mensaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var n in Model)
+        {
+            <tr>
+                <td>@n.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@n.Asunto</td>
+                <td>@n.Mensaje</td>
+            </tr>
+        }
+    </tbody>
+</table>

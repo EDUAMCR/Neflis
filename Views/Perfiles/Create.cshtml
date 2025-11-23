@@ -1,0 +1,83 @@
+﻿@model Neflis.Models.ViewModels.PerfilViewModel
+
+@{
+    ViewData["Title"] = "Crear perfil";
+
+    // si estas URLs no cargan en tu máquina, luego las cambiamos por /img/avatar1.png, etc.
+    var avatares = new[]
+    {
+            "/img/avatar_1.jpeg",
+            "/img/avatar_2.jpeg",
+            "/img/avatar_3.jpeg",
+            "/img/avatar_4.jpeg"
+    };
+}
+
+<div class="auth-shell">
+    <div class="auth-card" style="max-width:520px;text-align:left;">
+        <h2 class="auth-title text-center mb-4">Crear perfil</h2>
+
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-warning small mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="NombrePerfil" class="form-label">Nombre del perfil</label>
+                <input asp-for="NombrePerfil" class="form-control" />
+                <span asp-validation-for="NombrePerfil" class="text-warning small"></span>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input asp-for="EsInfantil" class="form-check-input" id="infantilChk" />
+                <label asp-for="EsInfantil" class="form-check-label" for="infantilChk">Perfil infantil</label>
+            </div>
+
+            <!-- se llena cuando tocas un avatar -->
+            <input type="hidden" asp-for="AvatarUrl" id="AvatarUrl" />
+
+            <div class="mb-4">
+                <label class="form-label d-block mb-2">Selecciona un avatar</label>
+                <div class="d-flex gap-3 flex-wrap">
+                    @foreach (var url in avatares)
+                    {
+                        <button type="button"
+                                class="avatar-option p-0"
+                                data-url="@url"
+                                style="background:none;border:none;outline:none;">
+                            <img src="@url"
+                                 alt="avatar"
+                                 style="width:88px;height:88px;border-radius:14px;object-fit:cover;border:3px solid transparent;" />
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <button type="submit" class="btn-auth-primary mb-2" style="width:100%;">Guardar</button>
+            <a asp-action="Index" class="btn-auth-secondary" style="width:100%;text-align:center;">Volver</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const options = document.querySelectorAll('.avatar-option');
+        const hiddenInput = document.getElementById('AvatarUrl');
+
+        options.forEach(opt => {
+            opt.addEventListener('click', () => {
+                const url = opt.getAttribute('data-url');
+                hiddenInput.value = url;
+
+                // quitar selección previa
+                options.forEach(o => {
+                    const img = o.querySelector('img');
+                    if (img) img.style.borderColor = 'transparent';
+                });
+
+                // marcar seleccionado
+                const img = opt.querySelector('img');
+                if (img) img.style.borderColor = '#e50914';
+            });
+        });
+    </script>
+}

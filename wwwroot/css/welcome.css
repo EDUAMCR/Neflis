@@ -1,0 +1,93 @@
+﻿body.welcome-page {
+    min-height: 100vh;
+    margin: 0;
+
+    /* Fondo compuesto: degradado + imagen */
+    background-image:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.8) 100%),
+        url('/img/fondo_2.jpg');
+    background-repeat: no-repeat, no-repeat;
+
+    /* Centrado total de la imagen */
+    background-position: center center, center center;
+
+    /* Imagen ajustada al ancho exacto del viewport */
+    background-size: 100% auto; /* mantiene proporción, cubre ancho exacto */
+
+    /* Fijamos el fondo */
+    background-attachment: fixed;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #f5f5f1;
+    font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+}
+
+
+/* Caja principal */
+.welcome-box {
+    background: transparent; /* fondo completamente transparente */
+    border-radius: 22px;
+    padding: 3rem 3.5rem;
+    max-width: 520px;
+    width: 92%;
+    text-align: center;
+
+    /* opcional: podés mantener un sutil desenfoque */
+    backdrop-filter: blur(4px);
+
+    /* sombra leve para resaltar el contenido sin fondo sólido */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+
+/* Logo */
+.welcome-logo {
+    height: 75px;
+    object-fit: contain;
+    margin-bottom: 1.5rem;
+}
+
+/* Título */
+.welcome-title {
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: #f5f5f1;
+}
+
+/* Descripción */
+.welcome-text {
+    font-size: 1rem;
+    color: rgba(245, 245, 241, 0.85);
+}
+
+/* Botón principal */
+.btn-acceder {
+    background-color: #e50914;
+    border: none;
+    border-radius: 999px;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-acceder:hover {
+    background-color: #b00710;
+    transform: scale(1.05);
+}
+
+/* Footer */
+.footer-text {
+    font-size: 0.85rem;
+    color: rgba(245, 245, 241, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .welcome-box {
+        padding: 2.2rem 1.4rem;
+    }
+}

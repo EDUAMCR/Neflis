@@ -1,0 +1,327 @@
+﻿/* ====== footer oscuro ====== */
+.footer-dark {
+    background: #221f1f;
+    color: #f5f5f1;
+    border-top: 1px solid rgba(255,255,255,.05);
+}
+
+/* ====== LOGIN / REGISTER THEME ====== */
+/* se aplica SOLO cuando la vista pone ViewData["BodyClass"] = "auth-body" */
+.auth-body {
+    min-height: 100vh;
+    background: linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.9) 100%), url('/img/fondo_2.jpg') center center/cover no-repeat fixed;
+}
+
+/* este sí centra el formulario pero SIN afectar nav/footer */
+.auth-shell {
+    min-height: calc(100vh - 120px); /* resta nav+footer aproximado */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem 2rem;
+}
+
+.auth-wrapper {
+    width: 100%;
+    max-width: 430px;
+}
+
+.auth-card {
+    background: rgba(20, 20, 20, 0.83);
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    border-radius: 18px;
+    backdrop-filter: blur(4px);
+    padding: 2.8rem 2.4rem 2.2rem;
+    color: #f5f5f1;
+    text-align: center;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+}
+
+.auth-logo {
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 1.5rem;
+}
+
+.auth-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+/* formularios dentro de la card */
+.auth-card .form-label {
+    font-weight: 500;
+    margin-bottom: .35rem;
+    color: #f5f5f1;
+}
+
+.auth-card .form-control {
+    background: rgba(15, 15, 15, 0.55);
+    border: 1px solid rgba(255,255,255,0.07);
+    color: #f5f5f1;
+    border-radius: 10px;
+}
+
+    .auth-card .form-control:focus {
+        border-color: #e50914;
+        box-shadow: 0 0 0 .25rem rgba(229, 9, 20, 0.25);
+    }
+
+/* botones */
+.btn-auth-primary {
+    background: #e50914;
+    border: none;
+    border-radius: 999px;
+    width: 100%;
+    padding: .6rem 1rem;
+    font-weight: 600;
+    margin-top: .5rem;
+}
+
+.btn-auth-secondary {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 999px;
+    width: 100%;
+    padding: .6rem 1rem;
+    color: #f5f5f1;
+    margin-top: 1rem; /* ← aumentamos un poco */
+}
+
+.btn-auth-primary:hover {
+    background: #f6121d;
+    transform: scale(1.02);
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-auth-secondary:hover {
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.02);
+    transition: all 0.15s ease-in-out;
+}
+
+
+/* espacio general entre elementos */
+.auth-card form > *:not(:last-child) {
+    margin-bottom: 1rem;
+}
+
+/* botón del ojo */
+.auth-card .input-group .btn {
+    background: rgba(15,15,15,.7);
+    border-color: rgba(255,255,255,.05);
+    color: #f5f5f1;
+}
+
+/* autofill chrome */
+.auth-card input:-webkit-autofill,
+.auth-card input:-webkit-autofill:hover,
+.auth-card input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px rgba(15,15,15,0.55) inset !important;
+    -webkit-text-fill-color: #f5f5f1 !important;
+}
+
+@media (max-width: 576px) {
+    .auth-card {
+        padding: 2.3rem 1.4rem 1.8rem;
+    }
+
+    .auth-shell {
+        min-height: calc(100vh - 140px);
+        padding: 2.5rem 1rem 2rem;
+    }
+}
+/* ====== selector de perfiles ====== */
+
+.page-shell {
+    min-height: calc(100vh - 120px); /* deja el footer abajo aunque haya poco contenido */
+}
+
+.profiles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1.5rem;
+}
+
+.profile-card {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(0,0,0,.05);
+    padding: 1.3rem 1rem 1.1rem;
+    text-align: center;
+    border: 1px solid rgba(0,0,0,.03);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: #221f1f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+
+.avatar-letter {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.profile-name {
+    margin-bottom: .25rem;
+}
+
+.profile-type {
+    font-size: .85rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.btn-neflis-primary {
+    background: #e50914;
+    border: none;
+    color: #fff;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+    .btn-neflis-primary:hover {
+        background: #c40811;
+    }
+
+.btn-neflis-secondary {
+    background: #221f1f;
+    border: none;
+    color: #fff;
+    border-radius: 999px;
+    font-weight: 500;
+}
+
+.profile-card-add {
+    border: 2px dashed rgba(0,0,0,.08);
+    background: rgba(245,245,245,.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.profile-add-circle {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: #e50914;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 2rem;
+}
+
+/* ===== PLANES DE SUSCRIPCIÓN ===== */
+.page-shell {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.planes-title {
+    margin-bottom: 4rem !important;
+}
+
+.planes-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+}
+
+/* card base */
+.plan-card {
+    position: relative;
+    width: 300px;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+    .plan-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+
+/* ola compatible (Firefox OK) */
+.plan-fill {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( to top, var(--fill-color, #e50914) 0%, rgba(229, 9, 20, 0.7) 50%, rgba(229, 9, 20, 0.0) 100% );
+    height: 0%;
+    transition: height 0.9s ease-in-out;
+    z-index: 0;
+    /* esto sí lo soportan los 3: Chrome, Edge, Firefox */
+    clip-path: ellipse(120% 100% at 50% 100%);
+}
+
+.plan-card:hover .plan-fill {
+    height: 100%;
+    opacity: .35;
+}
+
+/* contenido */
+.plan-body {
+    position: relative;
+    z-index: 1;
+    padding: 2.2rem 1.6rem;
+}
+
+.plan-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.plan-price {
+    font-size: 1.4rem;
+    color: #e50914;
+    margin-bottom: 1rem;
+}
+
+.btn-neflis-primary {
+    background: #e50914;
+    border: none;
+    color: #fff;
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 0.6rem 1rem;
+    transition: background 0.2s ease;
+}
+
+    .btn-neflis-primary:hover {
+        background: #b00710;
+    }
+
+/* responsive */
+@media (max-width: 768px) {
+    .plan-card {
+        width: 90%;
+    }
+
+    .planes-title {
+        margin-bottom: 2.5rem !important;
+    }
+}

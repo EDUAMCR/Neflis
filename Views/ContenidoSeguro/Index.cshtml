@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Desbloquear contenido restringido";
+}
+
+<h2 class="mb-4">Desbloquear contenido restringido</h2>
+<p>Ingresa tu contraseña de Neflis para mostrar el contenido +18.</p>
+
+@if (TempData["MensajeError"] != null)
+{
+    <div class="alert alert-danger">@TempData["MensajeError"]</div>
+}
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+
+<form asp-action="Index" method="post" class="col-md-4 mt-3">
+    <div class="mb-3 position-relative">
+        <label class="form-label">Contraseña</label>
+        <div class="input-group">
+            <input type="password" name="password" id="passwordInput" class="form-control" required />
+            <button type="button" class="btn btn-outline-secondary" id="togglePwd" tabindex="-1">
+                👁
+            </button>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Desbloquear</button>
+    <a asp-controller="Catalogo" asp-action="Index" class="btn btn-secondary ms-2">Volver</a>
+</form>
+
+@section Scripts {
+    <script>
+        const input = document.getElementById('passwordInput');
+        const btn = document.getElementById('togglePwd');
+
+        btn.addEventListener('click', () => {
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁';
+            }
+        });
+    </script>
+}

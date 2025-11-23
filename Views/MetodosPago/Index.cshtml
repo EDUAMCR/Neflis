@@ -1,0 +1,44 @@
+﻿@model IEnumerable<Neflis.Models.MetodoPago>
+
+@{
+    ViewData["Title"] = "Mis métodos de pago";
+}
+
+<h2>Mis métodos de pago</h2>
+
+<a asp-action="Create" class="btn btn-primary mb-3">Agregar nuevo</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Número</th>
+            <th>Vence</th>
+            <th>Predeterminado</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var m in Model)
+        {
+            <tr>
+                <td>@m.Tipo</td>
+                <td>@m.NumeroEnmascarado</td>
+                <td>@m.Vence</td>
+                <td>
+                    @if (m.EsPredeterminado)
+                    {
+                        <span class="badge bg-success">Sí</span>
+                    }
+                    else
+                    {
+                        <a asp-action="Predeterminar" asp-route-id="@m.MetodoPagoId" class="btn btn-sm btn-outline-secondary">Marcar</a>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Eliminar" asp-route-id="@m.MetodoPagoId" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

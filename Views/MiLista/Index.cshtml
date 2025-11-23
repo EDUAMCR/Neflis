@@ -1,0 +1,25 @@
+﻿@model IEnumerable<Neflis.Models.Contenido>
+
+<h2>Mi lista</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Género</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Titulo</td>
+                <td>@item.Genero</td>
+                <td>
+                    <a asp-controller="MiLista" asp-action="Quitar" asp-route-id="@item.ContenidoId" class="btn btn-sm btn-danger">Quitar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

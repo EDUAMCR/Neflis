@@ -1,0 +1,52 @@
+﻿@model Neflis.Models.MetodoPago
+@{
+    ViewData["Title"] = "Agregar método de pago";
+    var returnUrl = ViewBag.ReturnUrl as string;
+}
+
+<div class="auth-shell">
+    <div class="auth-wrapper">
+        <div class="auth-card text-start">
+            <h2 class="auth-title mb-3">Agregar método de pago</h2>
+
+            <form asp-action="Create" method="post">
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                <div class="mb-3">
+                    <label asp-for="Tipo" class="form-label">Tipo</label>
+                    <select asp-for="Tipo" class="form-control">
+                        <option value="Tarjeta Crédito">Tarjeta Crédito</option>
+                        <option value="Tarjeta Débito">Tarjeta Débito</option>
+                        <option value="Paypal">Paypal</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Últimos 4 dígitos</label>
+                    <input asp-for="NumeroEnmascarado" class="form-control" placeholder="1234" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="FechaVencimiento" class="form-label">Fecha de vencimiento (MM/AA)</label>
+                    <input asp-for="FechaVencimiento" class="form-control" placeholder="12/28" />
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="EsPredeterminado" class="form-check-input" />
+                    <label asp-for="EsPredeterminado" class="form-check-label">Usar como predeterminado</label>
+                </div>
+
+                <button type="submit" class="btn-auth-primary">Guardar</button>
+
+                @if (string.IsNullOrEmpty(returnUrl))
+                {
+                    <a asp-action="Index" class="btn-auth-secondary d-block mt-2 text-center">Volver</a>
+                }
+                else
+                {
+                    <a href="@returnUrl" class="btn-auth-secondary d-block mt-2 text-center">Volver</a>
+                }
+            </form>
+        </div>
+    </div>
+</div>

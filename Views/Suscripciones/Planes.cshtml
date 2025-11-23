@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Neflis.Models.PlanSuscripcion>
+
+@{
+    ViewData["Title"] = "Planes de suscripción";
+}
+
+<div class="page-shell">
+    <div class="container py-5 text-center">
+        <h2 class="planes-title mb-5 fw-semibold">Planes de suscripción</h2>
+
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-info">@TempData["Mensaje"]</div>
+        }
+
+        <div class="planes-grid">
+            @foreach (var plan in Model.Select((p, i) => new { p, i }))
+            {
+                var color = plan.i == 0 ? "#e50914" : plan.i == 1 ? "#b00710" : "#7b040b";
+                <div class="plan-card" style="--fill-color:@color;">
+                    <div class="plan-fill"></div>
+                    <div class="plan-body">
+                        <h4 class="plan-title">@plan.p.NombrePlan</h4>
+                        <p class="plan-price"><strong>₡ @plan.p.Precio.ToString("N0")</strong></p>
+                        <p>Período: @plan.p.PeriodoMeses mes(es)</p>
+                        <p>Perfiles permitidos: @plan.p.MaxPerfiles</p>
+
+                        <form asp-action="Contratar" method="post">
+                            <input type="hidden" name="id" value="@plan.p.PlanSuscripcionId" />
+                            <button type="submit" class="btn btn-neflis-primary w-100">
+                                Elegir este plan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
