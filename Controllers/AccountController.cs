@@ -21,10 +21,9 @@ namespace Neflis.Controllers
             _emailService = emailService;
         }
 
-        // =========================================================
-        //  REGISTRO
-        // =========================================================
-
+        // --------------------------------------------------------------------
+        // REGISTRO
+        // --------------------------------------------------------------------
         // GET: /Account/Register
         public IActionResult Register()
         {
@@ -51,8 +50,7 @@ namespace Neflis.Controllers
             {
                 Correo = model.Correo,
                 NombreCompleto = model.NombreCompleto,
-                // ⚠️ Si luego quieres hash, aquí es donde se aplica
-                Password = model.Password,
+                Password = model.Password, // (pendiente: encriptar)
                 Rol = "Suscriptor",
                 EstaActivo = true,
                 FechaRegistro = DateTime.UtcNow
@@ -65,10 +63,9 @@ namespace Neflis.Controllers
             return RedirectToAction("Login");
         }
 
-        // =========================================================
-        //  LOGIN / LOGOUT
-        // =========================================================
-
+        // --------------------------------------------------------------------
+        // LOGIN / LOGOUT
+        // --------------------------------------------------------------------
         // GET: /Account/Login
         public IActionResult Login()
         {
@@ -106,9 +103,7 @@ namespace Neflis.Controllers
             };
 
             var claimsIdentity = new ClaimsIdentity(
-                claims,
-                CookieAuthenticationDefaults.AuthenticationScheme
-            );
+                claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
             var authProperties = new AuthenticationProperties
             {
@@ -118,8 +113,7 @@ namespace Neflis.Controllers
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
-                authProperties
-            );
+                authProperties);
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
@@ -127,7 +121,7 @@ namespace Neflis.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // GET/POST: /Account/Logout
+        // GET: /Account/Logout
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -135,14 +129,89 @@ namespace Neflis.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        public IActionResult AccessDenied()
+        // --------------------------------------------------------------------
+        // FLUJO 1 (LEGACY / SIMULADO): RecuperarPassword / RestablecerPassword
+        // --------------------------------------------------------------------
+        // GET: /Account/RecuperarPassword
+        public IActionResult RecuperarPassword()
         {
             return View();
         }
 
-        // =========================================================
-        //  RECUPERAR CONTRASEÑA (REAL, CON CORREO)
-        // =========================================================
+        // POST: /Account/RecuperarPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RecuperarPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var usuario = _context.Usuarios.FirstOrDefault(u => u.Correo == model.Correo);
+            if (usuario == null)
+            {
+                // no decimos que no existe para no dar pista
+                TempData["Mensaje"] = "Si el correo existe, se envió un enlace de recuperación.";
+                return RedirectToAction("RecuperarPassword");
+            }
+
+            // SIMULACIÓN: NO USa BD ni correo real
+            var token = Guid.NewGuid().ToString("N");
+
+            TempData["Mensaje"] = $"Simulación: usa este token para restablecer: {token}";
+            TempData["Token"] = token;
+            TempData["Correo"] = model.Correo;
+
+            return RedirectToAction("RestablecerPassword", new { token = token, correo = model.Correo });
+        }
+
+        // GET: /Account/RestablecerPassword
+        public IActionResult RestablecerPassword(string token, string correo)
+        {
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(correo))
+                return RedirectToAction("Login");
+
+            var model = new RestablecerPasswordViewModel
+            {
+                Token = token
+            };
+
+            ViewBag.Correo = correo;
+            return View(model);
+        }
+
+        // POST: /Account/RestablecerPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RestablecerPassword(string correo, RestablecerPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Correo = correo;
+                return View(model);
+            }
+
+            // En este flujo NO se valida token en BD (es solo demo)
+            var usuario = _context.Usuarios.FirstOrDefault(u => u.Correo == correo);
+            if (usuario == null)
+            {
+                ModelState.AddModelError(string.Empty, "Usuario no encontrado.");
+                return View(model);
+            }
+
+            usuario.Password = model.NuevoPassword;
+            _context.SaveChanges();
+
+            TempData["Mensaje"] = "Contraseña actualizada. Inicie sesión.";
+            return RedirectToAction("Login");
+        }
+
+        // --------------------------------------------------------------------
+        // FLUJO 2 (REAL CON CORREO): ForgotPassword / ResetPassword
+        // --------------------------------------------------------------------
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
 
         // GET: /Account/ForgotPassword
         [HttpGet]
@@ -154,21 +223,21 @@ namespace Neflis.Controllers
         // POST: /Account/ForgotPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ForgotPassword(string correo)
+        public async Task<IActionResult> ForgotPassword(string email)
         {
-            if (string.IsNullOrWhiteSpace(correo))
+            if (string.IsNullOrWhiteSpace(email))
             {
                 ModelState.AddModelError("", "Debes ingresar un correo.");
                 return View();
             }
 
             var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Correo == correo);
+                .FirstOrDefaultAsync(u => u.Correo == email);
 
-            // Por seguridad: aunque no exista, se muestra el mismo mensaje
+            // Por seguridad: aunque no exista, no decimos que no existe
             if (usuario != null)
             {
-                // Generar token
+                // Generar token y fecha de expiración
                 var token = Guid.NewGuid().ToString("N");
                 usuario.ResetPasswordToken = token;
                 usuario.ResetPasswordTokenExpira = DateTime.UtcNow.AddHours(1);
@@ -178,17 +247,16 @@ namespace Neflis.Controllers
                 var link = Url.Action(
                     "ResetPassword",
                     "Account",
-                    new { token = token, correo = usuario.Correo },
-                    protocol: HttpContext.Request.Scheme
-                );
+                    new { token = token, email = usuario.Correo },
+                    protocol: HttpContext.Request.Scheme);
 
                 var asunto = "Neflis - Restablecer contraseña";
                 var cuerpo = $@"
-<p>Hola {usuario.NombreCompleto},</p>
-<p>Hemos recibido una solicitud para restablecer tu contraseña en <strong>Neflis</strong>.</p>
-<p>Haz clic en el siguiente enlace (válido por 1 hora):</p>
-<p><a href=""{link}"">Restablecer contraseña</a></p>
-<p>Si no fuiste tú, puedes ignorar este correo.</p>";
+                    <p>Hola {usuario.NombreCompleto},</p>
+                    <p>Hemos recibido una solicitud para restablecer tu contraseña en <strong>Neflis</strong>.</p>
+                    <p>Haz clic en el siguiente enlace para continuar:</p>
+                    <p><a href=""{link}"">Restablecer contraseña</a></p>
+                    <p>Si no fuiste tú, puedes ignorar este correo.</p>";
 
                 await _emailService.EnviarCorreoAsync(usuario.Correo, asunto, cuerpo);
             }
@@ -199,24 +267,24 @@ namespace Neflis.Controllers
 
         // GET: /Account/ResetPassword
         [HttpGet]
-        public async Task<IActionResult> ResetPassword(string token, string correo)
+        public async Task<IActionResult> ResetPassword(string token, string email)
         {
-            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(correo))
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
                 return BadRequest("Datos inválidos.");
 
             var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Correo == correo && u.ResetPasswordToken == token);
+                .FirstOrDefaultAsync(u => u.Correo == email && u.ResetPasswordToken == token);
 
             if (usuario == null ||
                 usuario.ResetPasswordTokenExpira == null ||
                 usuario.ResetPasswordTokenExpira < DateTime.UtcNow)
             {
-                return View("ResetPasswordInvalido");
+                return View("ResetPasswordInvalido"); // vista simple con mensaje de error
             }
 
             var vm = new ResetPasswordViewModel
             {
-                Correo = correo,
+                Correo = email,
                 Token = token
             };
 
@@ -231,12 +299,6 @@ namespace Neflis.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            if (model.NuevaContrasena != model.ConfirmarContrasena)
-            {
-                ModelState.AddModelError("", "Las contraseñas no coinciden.");
-                return View(model);
-            }
-
             var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u =>
                     u.Correo == model.Correo &&
@@ -249,10 +311,10 @@ namespace Neflis.Controllers
                 return View("ResetPasswordInvalido");
             }
 
-            // ⚠️ AJUSTA ESTA LÍNEA AL CAMPO REAL DE TU MODELO
-            // Aquí usas la MISMA lógica que en Register (hash si luego lo agregas)
+            // Cambiar contraseña
             usuario.Password = model.NuevaContrasena;
 
+            // limpiar token
             usuario.ResetPasswordToken = null;
             usuario.ResetPasswordTokenExpira = null;
 
@@ -262,14 +324,13 @@ namespace Neflis.Controllers
             return View("ResetPasswordConfirmado");
         }
 
-        // =========================================================
-        //  PRUEBA DE ENVÍO DE CORREO
-        // =========================================================
-
+        // --------------------------------------------------------------------
+        // PRUEBA DE ENVÍO DE CORREO
+        // --------------------------------------------------------------------
         [HttpGet]
-        public async Task<IActionResult> TestEmail()
+        public async Task<IActionResult> TestEmail([FromServices] IEmailService email)
         {
-            await _emailService.EnviarCorreoAsync(
+            await email.EnviarCorreoAsync(
                 "prynelfis@gmail.com",
                 "Prueba Neflis",
                 "<h1>¡Funciona el correo!</h1><p>Esto es una prueba desde Neflis.</p>"
