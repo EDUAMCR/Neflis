@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Neflis.Data;
 using Neflis.Models;
+using Neflis.Services;
 using System.Security.Claims;
 
 namespace Neflis.Controllers
@@ -10,10 +12,12 @@ namespace Neflis.Controllers
     public class SuscripcionesController : Controller
     {
         private readonly NeflisDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public SuscripcionesController(NeflisDbContext context)
+        public SuscripcionesController(NeflisDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         private int GetUsuarioId()
@@ -21,7 +25,9 @@ namespace Neflis.Controllers
             return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
         }
 
-        // GET: /Suscripciones/Planes
+        // --------------------------------------------------------------------
+        // LISTA DE PLANES
+        // --------------------------------------------------------------------
         public IActionResult Planes()
         {
             var planes = _context.PlanesSuscripcion
@@ -31,8 +37,9 @@ namespace Neflis.Controllers
             return View(planes);
         }
 
-        // POST: /Suscripciones/Contratar
-        // ahora NO activa, solo deja PENDIENTE y manda a método de pago si hace falta
+        // --------------------------------------------------------------------
+        // CONTRATAR (DEJA PLAN EN PENDIENTE)
+        // --------------------------------------------------------------------
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Contratar(int id)
@@ -43,10 +50,10 @@ namespace Neflis.Controllers
             if (plan == null)
                 return NotFound();
 
-            // cancelar suscripciones activas o pendientes anteriores
+            // cancelar activas o pendientes anteriores
             var anteriores = _context.SuscripcionesUsuario
                 .Where(s => s.UsuarioId == usuarioId &&
-                            (s.Estado == "Activa" || s.Estado == "Pendiente"))
+                           (s.Estado == "Activa" || s.Estado == "Pendiente"))
                 .ToList();
 
             foreach (var s in anteriores)
@@ -60,19 +67,17 @@ namespace Neflis.Controllers
                 UsuarioId = usuarioId,
                 PlanSuscripcionId = id,
                 FechaInicio = DateTime.UtcNow,
-                Estado = "Pendiente" // 🔴 antes la ponías "Activa"
+                Estado = "Pendiente"
             };
 
             _context.SuscripcionesUsuario.Add(nueva);
             _context.SaveChanges();
 
-            // ¿tiene método de pago?
             bool tieneMetodo = _context.MetodosPago.Any(m => m.UsuarioId == usuarioId);
 
             if (!tieneMetodo)
             {
                 TempData["Mensaje"] = "Antes de activar el plan agregá un método de pago.";
-                // lo mandamos a crear método y luego que vuelva a MiPlan
                 var returnUrl = Url.Action("MiPlan", "Suscripciones");
                 return RedirectToAction("Create", "MetodosPago", new { returnUrl });
             }
@@ -81,7 +86,9 @@ namespace Neflis.Controllers
             return RedirectToAction("MiPlan");
         }
 
-        // GET: /Suscripciones/MiPlan
+        // --------------------------------------------------------------------
+        // MI PLAN
+        // --------------------------------------------------------------------
         public IActionResult MiPlan()
         {
             var usuarioId = GetUsuarioId();
@@ -102,18 +109,18 @@ namespace Neflis.Controllers
                 return RedirectToAction("Planes");
             }
 
-            // para que la vista sepa si mostrar "agregar método"
-            var tieneMetodo = _context.MetodosPago.Any(m => m.UsuarioId == usuarioId);
-            ViewBag.TieneMetodoPago = tieneMetodo;
-
+            ViewBag.TieneMetodoPago = _context.MetodosPago.Any(m => m.UsuarioId == usuarioId);
             ViewBag.Plan = suscripcion.Plan;
+
             return View(suscripcion.Suscripcion);
         }
 
-        // POST: /Suscripciones/Confirmar
+        // --------------------------------------------------------------------
+        // CONFIRMAR SUSCRIPCIÓN (ACTIVA PLAN + ENVÍA CORREO)
+        // --------------------------------------------------------------------
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Confirmar()
+        public async Task<IActionResult> Confirmar()
         {
             var usuarioId = GetUsuarioId();
 
@@ -128,7 +135,9 @@ namespace Neflis.Controllers
                 return RedirectToAction("MiPlan");
             }
 
-            var plan = _context.PlanesSuscripcion.Find(suscripcion.PlanSuscripcionId);
+            var plan = await _context.PlanesSuscripcion
+                .FirstOrDefaultAsync(p => p.PlanSuscripcionId == suscripcion.PlanSuscripcionId);
+
             if (plan == null)
             {
                 TempData["MensajeError"] = "No se encontró el plan asociado.";
@@ -140,6 +149,7 @@ namespace Neflis.Controllers
                 .OrderByDescending(m => m.EsPredeterminado)
                 .FirstOrDefault();
 
+            // ACTIVAR SUSCRIPCIÓN
             suscripcion.Estado = "Activa";
 
             _context.HistorialPagos.Add(new HistorialPago
@@ -159,22 +169,74 @@ namespace Neflis.Controllers
                 Fecha = DateTime.UtcNow
             });
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            // 👇 después de activar, ver si tiene perfiles
+            // ----------------------------------------------------------------
+            // ENVÍO DE CORREO
+            // ----------------------------------------------------------------
+            var usuario = _context.Usuarios.FirstOrDefault(u => u.UsuarioId == usuarioId);
+
+            if (usuario != null)
+            {
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                var logoUrl = baseUrl + Url.Content("~/img/logo.jpg");
+
+                var asunto = "Neflis - ¡Tu suscripción está activa!";
+                var cuerpo = $@"
+                <html>
+                <body style='background:#f5f5f5; padding:30px; font-family:Arial,sans-serif;'>
+                    <div style='max-width:520px; margin:0 auto; background:white; padding:30px;
+                                border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.15);'>
+
+                        <div style='text-align:center; margin-bottom:20px;'>
+                            <img src='{logoUrl}' alt='Neflis' style='height:50px; opacity:0.95;'/>
+                        </div>
+
+                        <h2 style='text-align:center; color:#222; margin-bottom:10px;'>
+                            ¡Tu suscripción está activa!
+                        </h2>
+
+                        <p style='font-size:15px; color:#444;'>
+                            Hola <strong>{usuario.NombreCompleto}</strong>,
+                        </p>
+
+                        <p style='font-size:15px; color:#444;'>
+                            Gracias por suscribirte a <strong>Neflis</strong>.
+                        </p>
+
+                        <div style='background:#f8f8f8; padding:16px 18px; border-radius:10px; margin:18px 0;'>
+                            <p><strong>Plan:</strong> {plan.NombrePlan}</p>
+                            <p><strong>Precio:</strong> ₡{plan.Precio:N0}</p>
+                            <p><strong>Perfiles máximos:</strong> {plan.MaxPerfiles}</p>
+                        </div>
+
+                        <p style='font-size:14px; color:#555;'>
+                            Ya puedes crear tus perfiles y comenzar a disfrutar del catálogo.
+                        </p>
+
+                        <p style='font-size:12px; color:#999; text-align:center; margin-top:30px;'>
+                            © 2025 - Neflis
+                        </p>
+                    </div>
+                </body>
+                </html>";
+
+                await _emailService.EnviarCorreoAsync(usuario.Correo, asunto, cuerpo);
+            }
+
+            // ----------------------------------------------------------------
+
             var tienePerfiles = _context.Perfiles.Any(p => p.UsuarioId == usuarioId);
 
             if (!tienePerfiles)
-            {
-                // ir directo a crear el primero
                 return RedirectToAction("Create", "Perfiles");
-            }
 
-            // si ya tiene al menos uno, lo llevo al selector
             return RedirectToAction("Index", "PerfilSelector");
         }
 
-        // POST: /Suscripciones/Cancelar
+        // --------------------------------------------------------------------
+        // CANCELAR
+        // --------------------------------------------------------------------
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Cancelar()
@@ -193,7 +255,6 @@ namespace Neflis.Controllers
                 TempData["Mensaje"] = "Suscripción cancelada.";
             }
 
-            // 👇 te devuelve a elegir plan
             return RedirectToAction("Planes");
         }
     }

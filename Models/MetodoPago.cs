@@ -12,19 +12,21 @@ namespace Neflis.Models
         [Required]
         public string Tipo { get; set; } = "Tarjeta";
 
-        // guardamos enmascarado
         [Required]
-        [RegularExpression(@"^\d{4}$", ErrorMessage = "Ingrese exactamente 4 dígitos.")]
+        [Display(Name = "Últimos 4 dígitos")]
+        [RegularExpression(@"^\d{4}$",
+            ErrorMessage = "Los últimos 4 dígitos deben ser solo números.")]
         public string NumeroEnmascarado { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "La fecha de vencimiento es obligatoria")]
-        [StringLength(5, ErrorMessage = "Formato inválido (MM/AA)")]
-        public string FechaVencimiento { get; set; }   
+        [Required]
+        [Display(Name = "Fecha de vencimiento (MM/AA)")]
+        [RegularExpression(@"^(0[1-9]|1[0-2])\/\d{2}$",
+            ErrorMessage = "Usa el formato MM/AA, por ejemplo 05/27.")]
+        public string FechaVencimiento { get; set; } = string.Empty;
         public string? Vence { get; set; }
 
         public bool EsPredeterminado { get; set; } = false;
 
-        // nav
         public Usuario Usuario { get; set; }
     }
 }

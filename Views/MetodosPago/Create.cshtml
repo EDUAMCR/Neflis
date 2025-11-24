@@ -6,12 +6,13 @@
 
 <div class="auth-shell">
     <div class="auth-wrapper">
-        <div class="auth-card text-start">
+        <div class="auth-card text-start" style="max-width: 480px;">
             <h2 class="auth-title mb-3">Agregar método de pago</h2>
 
             <form asp-action="Create" method="post">
                 <input type="hidden" name="returnUrl" value="@returnUrl" />
 
+                <!-- Tipo -->
                 <div class="mb-3">
                     <label asp-for="Tipo" class="form-label">Tipo</label>
                     <select asp-for="Tipo" class="form-control">
@@ -21,21 +22,40 @@
                     </select>
                 </div>
 
+                <!-- Últimos 4 dígitos -->
                 <div class="mb-3">
-                    <label class="form-label">Últimos 4 dígitos</label>
-                    <input asp-for="NumeroEnmascarado" class="form-control" placeholder="1234" />
+                    <label asp-for="NumeroEnmascarado" class="form-label">Últimos 4 dígitos</label>
+                    <input asp-for="NumeroEnmascarado"
+                           class="form-control"
+                           maxlength="4"
+                           inputmode="numeric"
+                           pattern="\d{4}"
+                           placeholder="1234"
+                           required />
+                    <span asp-validation-for="NumeroEnmascarado" class="text-warning small"></span>
                 </div>
 
+                <!-- Fecha de vencimiento -->
                 <div class="mb-3">
                     <label asp-for="FechaVencimiento" class="form-label">Fecha de vencimiento (MM/AA)</label>
-                    <input asp-for="FechaVencimiento" class="form-control" placeholder="12/28" />
+                    <input asp-for="FechaVencimiento"
+                           class="form-control"
+                           maxlength="5"
+                           id="FechaVencimiento"
+                           inputmode="numeric"
+                           placeholder="12/28"
+                           pattern="(0[1-9]|1[0-2])\/\d{2}"
+                           required />
+                    <span asp-validation-for="FechaVencimiento" class="text-warning small"></span>
                 </div>
 
+                <!-- Predeterminado -->
                 <div class="form-check mb-3">
                     <input asp-for="EsPredeterminado" class="form-check-input" />
                     <label asp-for="EsPredeterminado" class="form-check-label">Usar como predeterminado</label>
                 </div>
 
+                <!-- Botones -->
                 <button type="submit" class="btn-auth-primary">Guardar</button>
 
                 @if (string.IsNullOrEmpty(returnUrl))
@@ -50,3 +70,23 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // 🔹 Autoformato MM/AA
+        const fechaInput = document.getElementById("FechaVencimiento");
+
+        fechaInput.addEventListener("input", function (e) {
+            let v = e.target.value.replace(/[^\d]/g, "");
+
+            if (v.length >= 3) {
+                v = v.substring(0, 4);
+                e.target.value = v.substring(0, 2) + "/" + v.substring(2);
+            } else {
+                e.target.value = v;
+            }
+        });
+    </script>
+}

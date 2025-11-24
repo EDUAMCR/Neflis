@@ -10,6 +10,7 @@ namespace Neflis.Models.ViewModels
 
         [Required(ErrorMessage = "El nombre es obligatorio")]
         [StringLength(100)]
+        [Display(Name = "Nombre Completo")]
         public string NombreCompleto { get; set; }
 
         [Required(ErrorMessage = "La contraseña es obligatoria")]
@@ -20,6 +21,7 @@ namespace Neflis.Models.ViewModels
         [Required]
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Las contraseñas no coinciden")]
+        [Display(Name = "Confirmar Contraseña")]
         public string ConfirmarPassword { get; set; }
     }
 }

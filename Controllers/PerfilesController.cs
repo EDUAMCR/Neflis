@@ -174,5 +174,55 @@ namespace Neflis.Controllers
             return RedirectToAction("Index", "PerfilSelector");
         }
 
+        // GET: Perfiles/EditQuick/5  (edición rápida estilo popup)
+        [HttpGet]
+        public IActionResult EditQuick(int id)
+        {
+            var usuarioId = GetUsuarioId();
+
+            var perfil = _context.Perfiles
+                .FirstOrDefault(p => p.PerfilId == id && p.UsuarioId == usuarioId);
+
+            if (perfil == null)
+                return NotFound();
+
+            var vm = new PerfilViewModel
+            {
+                PerfilId = perfil.PerfilId,
+                NombrePerfil = perfil.NombrePerfil,
+                EsInfantil = perfil.EsInfantil,
+                AvatarUrl = perfil.AvatarUrl
+            };
+
+            return View(vm); // usa EditQuick.cshtml
+        }
+
+        // POST: Perfiles/EditQuick
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult EditQuick(PerfilViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var usuarioId = GetUsuarioId();
+
+            var perfil = _context.Perfiles
+                .FirstOrDefault(p => p.PerfilId == model.PerfilId && p.UsuarioId == usuarioId);
+
+            if (perfil == null)
+                return NotFound();
+
+            perfil.NombrePerfil = model.NombrePerfil;
+            perfil.EsInfantil = model.EsInfantil;
+            perfil.AvatarUrl = model.AvatarUrl;
+
+            _context.SaveChanges();
+
+            // volvemos al selector de perfiles
+            return RedirectToAction("Index", "PerfilSelector");
+        }
     }
 }

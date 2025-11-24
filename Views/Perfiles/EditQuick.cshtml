@@ -1,0 +1,98 @@
+﻿@model Neflis.Models.ViewModels.PerfilViewModel
+
+@{
+    ViewData["Title"] = "Editar perfil";
+    Layout = "_Layout";
+    ViewData["BodyClass"] = "auth-body";
+
+    // Lista de avatares disponibles
+    var avatares = new List<string>
+    {
+        "~/img/avatar_1.jpeg",
+        "~/img/avatar_2.jpeg",
+        "~/img/avatar_3.jpeg",
+        "~/img/avatar_4.jpeg"
+    };
+}
+
+<div class="auth-shell">
+    <div class="auth-wrapper">
+        <div class="auth-card" style="max-width:420px;">
+            <h2 class="auth-title mb-3 text-center">Editar perfil</h2>
+
+            <form asp-action="EditQuick" method="post">
+
+                <input type="hidden" asp-for="PerfilId" />
+
+                <!-- Avatar actual -->
+                <div class="text-center mb-3">
+                    <img src="@Url.Content(Model.AvatarUrl)"
+                         class="perfil-avatar"
+                         style="width:110px;height:110px;border-radius:50%;object-fit:cover;" />
+
+                    <p class="mt-2 small text-secondary">
+                        Selecciona un nuevo avatar si deseas cambiarlo.
+                    </p>
+                </div>
+
+                <!-- Selector de avatar -->
+                <div class="mb-4 text-center">
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+
+                        @foreach (var avatar in avatares)
+                        {
+                            <label style="cursor:pointer;">
+                                <input type="radio"
+                                       name="AvatarUrl"
+                                       value="@avatar"
+                                       @(Model.AvatarUrl == avatar ? "checked" : "")
+                                       class="d-none avatar-radio" />
+
+                                <img src="@Url.Content(avatar)"
+                                     style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid transparent;"
+                                     class="avatar-option" />
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Nombre -->
+                <div class="mb-3">
+                    <label asp-for="NombrePerfil" class="form-label">Nombre del perfil</label>
+                    <input asp-for="NombrePerfil" class="form-control" />
+                    <span asp-validation-for="NombrePerfil" class="text-warning small"></span>
+                </div>
+
+                <!-- Infantil -->
+                <div class="form-check mb-4">
+                    <input asp-for="EsInfantil" class="form-check-input" />
+                    <label class="form-check-label" asp-for="EsInfantil">Perfil infantil</label>
+                </div>
+
+                <button type="submit" class="btn-auth-primary w-100 mb-2">
+                    Guardar cambios
+                </button>
+
+                <a asp-action="Index" asp-controller="PerfilSelector" class="btn-auth-secondary w-100">
+                    Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Resaltar avatar seleccionado
+        document.querySelectorAll(".avatar-option").forEach(img => {
+            img.addEventListener("click", () => {
+                document.querySelectorAll(".avatar-option")
+                    .forEach(i => i.style.border = "3px solid transparent");
+
+                img.style.border = "3px solid #e50914"; // rojo
+            });
+        });
+    </script>
+
+    <partial name="_ValidationScriptsPartial" />
+}

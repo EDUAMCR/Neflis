@@ -221,36 +221,86 @@ namespace Neflis.Controllers
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
 
             var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Correo == model.Correo);
 
-            // Por seguridad: aunque no exista, no decimos que no existe
+            // Por seguridad — nunca revelar si el correo existe o no.
             if (usuario != null)
             {
-                // Generar token
+                // Crear token
                 var token = Guid.NewGuid().ToString("N");
                 usuario.ResetPasswordToken = token;
                 usuario.ResetPasswordTokenExpira = DateTime.UtcNow.AddHours(1);
                 await _context.SaveChangesAsync();
 
-                // Link absoluto a ResetPassword
+                // Link absoluto
                 var link = Url.Action(
                     "ResetPassword",
                     "Account",
                     new { token = token, email = usuario.Correo },
                     protocol: HttpContext.Request.Scheme);
 
+                // Logo (usa la imagen que tienes en wwwroot/img/logo.jpg)
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                var logoUrl = baseUrl + Url.Content("~/img/logo.jpg");
+
                 var asunto = "Neflis - Restablecer contraseña";
+
                 var cuerpo = $@"
-            <p>Hola {usuario.NombreCompleto},</p>
-            <p>Hemos recibido una solicitud para restablecer tu contraseña en <strong>Neflis</strong>.</p>
-            <p>Haz clic en el siguiente enlace para continuar:</p>
-            <p><a href=""{link}"">Restablecer contraseña</a></p>
-            <p>Si no fuiste tú, puedes ignorar este correo.</p>";
+        <html>
+        <body style='background:#f5f5f5; padding:30px; font-family:Arial, sans-serif;'>
+
+            <div style='max-width:520px; margin:0 auto; background:white; padding:30px; 
+                        border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.15);'>
+
+                <div style='text-align:center; margin-bottom:20px;'>
+                    <img src='{logoUrl}' alt='Neflis' style='height:55px; opacity:0.95;'/>
+                </div>
+
+                <h2 style='text-align:center; color:#222; margin-bottom:10px;'>
+                    Recuperación de acceso
+                </h2>
+
+                <p style='font-size:15px; color:#444;'>
+                    Hola <strong>{usuario.NombreCompleto}</strong>,
+                </p>
+
+                <p style='font-size:15px; color:#444;'>
+                    Hemos recibido una solicitud para restablecer tu contraseña en <strong>Neflis</strong>.
+                </p>
+
+                <div style='text-align:center; margin:25px 0;'>
+                    <a href='{link}'
+                       style='background:#e50914; color:white; padding:14px 26px; 
+                       border-radius:6px; text-decoration:none; font-weight:bold; 
+                       display:inline-block; font-size:15px;'>
+                       Restablecer contraseña
+                    </a>
+                </div>
+
+                <p style='font-size:13px; color:#666;'>
+                    Si el botón no funciona, copia y pega este enlace en tu navegador:
+                </p>
+
+                <p style='font-size:12px; word-break:break-all; color:#1a73e8;'>
+                    <a href='{link}' style='color:#1a73e8;'>{link}</a>
+                </p>
+
+                <p style='font-size:13px; color:#666; margin-top:25px;'>
+                    Si tú no realizaste esta solicitud, puedes ignorar este mensaje. 
+                    Tu contraseña seguirá siendo válida.
+                </p>
+
+                <p style='text-align:center; font-size:12px; color:#999; margin-top:30px;'>
+                    © 2025 - Neflis
+                </p>
+
+            </div>
+
+        </body>
+        </html>";
 
                 await _emailService.EnviarCorreoAsync(usuario.Correo, asunto, cuerpo);
             }
@@ -258,8 +308,6 @@ namespace Neflis.Controllers
             ViewBag.Mensaje = "Si el correo existe en el sistema, se enviaron instrucciones para restablecer la contraseña.";
             return View(model);
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> ResetPassword(string token, string email)

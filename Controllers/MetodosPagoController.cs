@@ -41,38 +41,40 @@ namespace Neflis.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(MetodoPago model, string? returnUrl)
+        public IActionResult Create(MetodoPago model, string? returnUrl = null)
         {
             var usuarioId = GetUsuarioId();
-
-            if (!string.IsNullOrWhiteSpace(model.NumeroEnmascarado) &&
-                model.NumeroEnmascarado.Length >= 4)
-            {
-                model.NumeroEnmascarado = "**** **** **** " +
-                    model.NumeroEnmascarado[^4..];
-            }
-
             model.UsuarioId = usuarioId;
 
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // enmascarar número usando los últimos 4 dígitos
+            model.NumeroEnmascarado = $"****{model.NumeroEnmascarado}";
+
+            // si este es predeterminado, desmarcar los otros
             if (model.EsPredeterminado)
             {
                 var otros = _context.MetodosPago
-                    .Where(m => m.UsuarioId == usuarioId);
-                foreach (var o in otros)
-                    o.EsPredeterminado = false;
+                    .Where(m => m.UsuarioId == usuarioId && m.EsPredeterminado)
+                    .ToList();
+
+                foreach (var m in otros)
+                {
+                    m.EsPredeterminado = false;
+                }
             }
 
             _context.MetodosPago.Add(model);
             _context.SaveChanges();
 
-            TempData["Mensaje"] = "Método de pago agregado correctamente.";
-
             if (!string.IsNullOrEmpty(returnUrl))
                 return Redirect(returnUrl);
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("MiPlan", "Suscripciones");
         }
-
 
         // MARCAR COMO PREDETERMINADO
         public IActionResult Predeterminar(int id)

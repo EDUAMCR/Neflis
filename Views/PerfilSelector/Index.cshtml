@@ -35,6 +35,14 @@
                     Usar este perfil
                 </a>
 
+                <a asp-controller="Perfiles"
+                   asp-action="EditQuick"
+                   asp-route-id="@p.PerfilId"
+                   class="btn btn-outline-light w-100 mt-2">
+                    Editar
+                </a>
+
+
                 <form asp-controller="Perfiles" asp-action="Delete" method="post" class="d-grid">
                     <input type="hidden" name="id" value="@p.PerfilId" />
                     <button type="submit" class="btn btn-outline-danger" style="border-radius:999px;">
