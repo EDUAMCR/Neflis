@@ -50,7 +50,7 @@ namespace Neflis.Controllers
             {
                 Correo = model.Correo,
                 NombreCompleto = model.NombreCompleto,
-                Password = model.Password, // (pendiente: encriptar)
+                Password = model.Password, // TODO: encriptar en el futuro
                 Rol = "Suscriptor",
                 EstaActivo = true,
                 FechaRegistro = DateTime.UtcNow
@@ -94,6 +94,7 @@ namespace Neflis.Controllers
                 return View(model);
             }
 
+            // crear identidad
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
@@ -130,15 +131,13 @@ namespace Neflis.Controllers
         }
 
         // --------------------------------------------------------------------
-        // FLUJO 1 (LEGACY / SIMULADO): RecuperarPassword / RestablecerPassword
+        // FLUJO 1 (SIMULADO): RecuperarPassword / RestablecerPassword
         // --------------------------------------------------------------------
-        // GET: /Account/RecuperarPassword
         public IActionResult RecuperarPassword()
         {
             return View();
         }
 
-        // POST: /Account/RecuperarPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult RecuperarPassword(ForgotPasswordViewModel model)
@@ -149,22 +148,19 @@ namespace Neflis.Controllers
             var usuario = _context.Usuarios.FirstOrDefault(u => u.Correo == model.Correo);
             if (usuario == null)
             {
-                // no decimos que no existe para no dar pista
                 TempData["Mensaje"] = "Si el correo existe, se envió un enlace de recuperación.";
                 return RedirectToAction("RecuperarPassword");
             }
 
-            // SIMULACIÓN: NO USa BD ni correo real
             var token = Guid.NewGuid().ToString("N");
 
             TempData["Mensaje"] = $"Simulación: usa este token para restablecer: {token}";
             TempData["Token"] = token;
             TempData["Correo"] = model.Correo;
 
-            return RedirectToAction("RestablecerPassword", new { token = token, correo = model.Correo });
+            return RedirectToAction("RestablecerPassword", new { token, correo = model.Correo });
         }
 
-        // GET: /Account/RestablecerPassword
         public IActionResult RestablecerPassword(string token, string correo)
         {
             if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(correo))
@@ -179,7 +175,6 @@ namespace Neflis.Controllers
             return View(model);
         }
 
-        // POST: /Account/RestablecerPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult RestablecerPassword(string correo, RestablecerPasswordViewModel model)
@@ -190,7 +185,6 @@ namespace Neflis.Controllers
                 return View(model);
             }
 
-            // En este flujo NO se valida token en BD (es solo demo)
             var usuario = _context.Usuarios.FirstOrDefault(u => u.Correo == correo);
             if (usuario == null)
             {
@@ -217,27 +211,27 @@ namespace Neflis.Controllers
         [HttpGet]
         public IActionResult ForgotPassword()
         {
-            return View();
+            // le pasamos un VM vacío a la vista
+            return View(new ForgotPasswordViewModel());
         }
 
         // POST: /Account/ForgotPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ForgotPassword(string email)
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
-            if (string.IsNullOrWhiteSpace(email))
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Debes ingresar un correo.");
-                return View();
+                return View(model);
             }
 
             var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Correo == email);
+                .FirstOrDefaultAsync(u => u.Correo == model.Correo);
 
             // Por seguridad: aunque no exista, no decimos que no existe
             if (usuario != null)
             {
-                // Generar token y fecha de expiración
+                // Generar token
                 var token = Guid.NewGuid().ToString("N");
                 usuario.ResetPasswordToken = token;
                 usuario.ResetPasswordTokenExpira = DateTime.UtcNow.AddHours(1);
@@ -252,20 +246,21 @@ namespace Neflis.Controllers
 
                 var asunto = "Neflis - Restablecer contraseña";
                 var cuerpo = $@"
-                    <p>Hola {usuario.NombreCompleto},</p>
-                    <p>Hemos recibido una solicitud para restablecer tu contraseña en <strong>Neflis</strong>.</p>
-                    <p>Haz clic en el siguiente enlace para continuar:</p>
-                    <p><a href=""{link}"">Restablecer contraseña</a></p>
-                    <p>Si no fuiste tú, puedes ignorar este correo.</p>";
+            <p>Hola {usuario.NombreCompleto},</p>
+            <p>Hemos recibido una solicitud para restablecer tu contraseña en <strong>Neflis</strong>.</p>
+            <p>Haz clic en el siguiente enlace para continuar:</p>
+            <p><a href=""{link}"">Restablecer contraseña</a></p>
+            <p>Si no fuiste tú, puedes ignorar este correo.</p>";
 
                 await _emailService.EnviarCorreoAsync(usuario.Correo, asunto, cuerpo);
             }
 
             ViewBag.Mensaje = "Si el correo existe en el sistema, se enviaron instrucciones para restablecer la contraseña.";
-            return View();
+            return View(model);
         }
 
-        // GET: /Account/ResetPassword
+
+
         [HttpGet]
         public async Task<IActionResult> ResetPassword(string token, string email)
         {
@@ -279,7 +274,7 @@ namespace Neflis.Controllers
                 usuario.ResetPasswordTokenExpira == null ||
                 usuario.ResetPasswordTokenExpira < DateTime.UtcNow)
             {
-                return View("ResetPasswordInvalido"); // vista simple con mensaje de error
+                return View("ResetPasswordInvalido");
             }
 
             var vm = new ResetPasswordViewModel
@@ -291,7 +286,6 @@ namespace Neflis.Controllers
             return View(vm);
         }
 
-        // POST: /Account/ResetPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
@@ -311,10 +305,7 @@ namespace Neflis.Controllers
                 return View("ResetPasswordInvalido");
             }
 
-            // Cambiar contraseña
             usuario.Password = model.NuevaContrasena;
-
-            // limpiar token
             usuario.ResetPasswordToken = null;
             usuario.ResetPasswordTokenExpira = null;
 
@@ -338,5 +329,7 @@ namespace Neflis.Controllers
 
             return Content("Correo enviado correctamente ✔");
         }
+
+
     }
 }

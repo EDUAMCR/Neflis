@@ -13,7 +13,11 @@
 
             <h2 class="auth-title">Crear cuenta</h2>
 
-            <form asp-action="Register" method="post" class="text-start">
+            <form asp-controller="Account" asp-action="Register" method="post" class="text-start">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="All" class="text-warning small"></div>
+
                 <div class="mb-3">
                     <label asp-for="Correo" class="form-label"></label>
                     <input asp-for="Correo" class="form-control" />
