@@ -15,11 +15,24 @@ namespace Neflis
             // 1. SERVICES
             builder.Services.AddControllersWithViews();
 
-            // DbContext
+            // ---------------------------------------------
+            // DbContext: SQL Server en Development, SQLite en Producción (Render)
+            // ---------------------------------------------
+            var connectionString = builder.Environment.IsDevelopment()
+                ? builder.Configuration.GetConnectionString("DefaultConnection")   // SQL Server local
+                : builder.Configuration.GetConnectionString("RenderConnection");   // SQLite en Render
+
             builder.Services.AddDbContext<NeflisDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-
+            {
+                if (builder.Environment.IsDevelopment())
+                {
+                    options.UseSqlServer(connectionString);
+                }
+                else
+                {
+                    options.UseSqlite(connectionString);
+                }
+            });
 
             // Autenticación por cookies
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -36,8 +49,7 @@ namespace Neflis
             // Servicio de correo
             builder.Services.AddScoped<IEmailService, EmailService>();
 
-
-            // ?? Necesario para leer la sesión desde _Layout:
+            // Necesario para leer la sesión desde _Layout:
             builder.Services.AddHttpContextAccessor();
 
             // Session
@@ -73,17 +85,20 @@ namespace Neflis
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-            // 3. SEEDING de planes
+            // 3. Inicializar BD (SQLite en Render o SQL local) + SEED de planes
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<NeflisDbContext>();
 
+                // Crea la BD si no existe (para SQLite en Render y para SQL en dev si hace falta)
+                db.Database.EnsureCreated();
+
                 if (!db.PlanesSuscripcion.Any())
                 {
                     db.PlanesSuscripcion.AddRange(
-                        new Neflis.Models.PlanSuscripcion { NombrePlan = "Básico", PeriodoMeses = 1, Precio = 3500, MaxPerfiles = 2 },
-                        new Neflis.Models.PlanSuscripcion { NombrePlan = "Estándar", PeriodoMeses = 1, Precio = 5500, MaxPerfiles = 4 },
-                        new Neflis.Models.PlanSuscripcion { NombrePlan = "Premium", PeriodoMeses = 1, Precio = 7500, MaxPerfiles = 5 }
+                        new PlanSuscripcion { NombrePlan = "Básico", PeriodoMeses = 1, Precio = 3500, MaxPerfiles = 2 },
+                        new PlanSuscripcion { NombrePlan = "Estándar", PeriodoMeses = 1, Precio = 5500, MaxPerfiles = 4 },
+                        new PlanSuscripcion { NombrePlan = "Premium", PeriodoMeses = 1, Precio = 7500, MaxPerfiles = 5 }
                     );
                     db.SaveChanges();
                 }

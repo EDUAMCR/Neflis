@@ -20,3 +20,41 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* Avatar grande en EditQuick */
+.perfil-avatar-lg {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 0 12px rgba(0,0,0,0.4);
+}
+
+/* Avatares pequeños (opciones) */
+.perfil-avatar-option {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform .2s ease;
+}
+
+.avatar-choice {
+    border: 2px solid transparent;
+    padding: 4px;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+    .avatar-choice:hover {
+        transform: scale(1.1);
+    }
+
+.avatar-choice--active {
+    border-color: #e50914; /* rojo Neflis */
+    transform: scale(1.15);
+}

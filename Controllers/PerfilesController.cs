@@ -174,12 +174,11 @@ namespace Neflis.Controllers
             return RedirectToAction("Index", "PerfilSelector");
         }
 
-        // GET: Perfiles/EditQuick/5  (edición rápida estilo popup)
+        // GET: Perfiles/EditQuick/5
         [HttpGet]
         public IActionResult EditQuick(int id)
         {
             var usuarioId = GetUsuarioId();
-
             var perfil = _context.Perfiles
                 .FirstOrDefault(p => p.PerfilId == id && p.UsuarioId == usuarioId);
 
@@ -191,10 +190,13 @@ namespace Neflis.Controllers
                 PerfilId = perfil.PerfilId,
                 NombrePerfil = perfil.NombrePerfil,
                 EsInfantil = perfil.EsInfantil,
-                AvatarUrl = perfil.AvatarUrl
+                // si no tiene avatar, ponemos uno por defecto
+                AvatarUrl = string.IsNullOrEmpty(perfil.AvatarUrl)
+                    ? "/img/avatar_1.jpeg"
+                    : perfil.AvatarUrl
             };
 
-            return View(vm); // usa EditQuick.cshtml
+            return View(vm);
         }
 
         // POST: Perfiles/EditQuick
@@ -203,12 +205,9 @@ namespace Neflis.Controllers
         public IActionResult EditQuick(PerfilViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
 
             var usuarioId = GetUsuarioId();
-
             var perfil = _context.Perfiles
                 .FirstOrDefault(p => p.PerfilId == model.PerfilId && p.UsuarioId == usuarioId);
 
@@ -217,12 +216,16 @@ namespace Neflis.Controllers
 
             perfil.NombrePerfil = model.NombrePerfil;
             perfil.EsInfantil = model.EsInfantil;
-            perfil.AvatarUrl = model.AvatarUrl;
+            // ⬇️ AQUÍ es donde se guarda el avatar correcto
+            perfil.AvatarUrl = string.IsNullOrEmpty(model.AvatarUrl)
+                ? "/img/avatar_1.jpeg"
+                : model.AvatarUrl;
 
             _context.SaveChanges();
 
-            // volvemos al selector de perfiles
             return RedirectToAction("Index", "PerfilSelector");
         }
+
     }
 }
+

@@ -6,12 +6,15 @@
 }
 
 <div class="container page-shell py-5">
+
     <h2 class="mb-4">Selecciona un perfil</h2>
 
     <div class="profiles-grid">
+
         @foreach (var p in Model)
         {
             <div class="profile-card">
+
                 <div class="profile-avatar">
                     @if (!string.IsNullOrWhiteSpace(p.AvatarUrl))
                     {
@@ -24,44 +27,67 @@
                         </span>
                     }
                 </div>
+
+
+
                 <h5 class="profile-name">@p.NombrePerfil</h5>
+
                 <p class="profile-type">
                     @(p.EsInfantil ? "Perfil infantil" : "Perfil estándar")
                 </p>
 
+                <!-- BOTÓN USAR PERFIL -->
                 <a asp-action="Usar"
                    asp-route-id="@p.PerfilId"
                    class="btn btn-neflis-primary w-100 mb-2">
                     Usar este perfil
                 </a>
 
-                <a asp-controller="Perfiles"
-                   asp-action="EditQuick"
-                   asp-route-id="@p.PerfilId"
-                   class="btn btn-outline-light w-100 mt-2">
-                    Editar
-                </a>
+                <!-- BOTÓN EDITAR (ESTILO ACTUALIZADO) -->
+                <form asp-controller="Perfiles"
+                      asp-action="EditQuick"
+                      method="get"
+                      class="d-grid mt-2">
 
-
-                <form asp-controller="Perfiles" asp-action="Delete" method="post" class="d-grid">
                     <input type="hidden" name="id" value="@p.PerfilId" />
-                    <button type="submit" class="btn btn-outline-danger" style="border-radius:999px;">
+
+                    <button type="submit"
+                            class="btn btn-edit-profile w-100">
+                        Editar
+                    </button>
+                </form>
+
+                <!-- BOTÓN ELIMINAR -->
+                <form asp-controller="Perfiles"
+                      asp-action="Delete"
+                      method="post"
+                      class="d-grid mt-2">
+
+                    <input type="hidden" name="id" value="@p.PerfilId" />
+
+                    <button type="submit"
+                            class="btn btn-outline-danger w-100"
+                            style="border-radius:999px;">
                         Eliminar
                     </button>
                 </form>
             </div>
         }
 
-        @* tarjeta de “nuevo” solo si no superó el plan *@
+        <!-- NUEVO PERFIL -->
         @if (totalPerfiles < maxPerfiles)
         {
             <div class="profile-card profile-card-add">
                 <div class="profile-add-circle">+</div>
                 <h5>Nuevo perfil</h5>
-                <a asp-controller="Perfiles" asp-action="Create" class="btn btn-dark w-100" style="border-radius:999px;">
+                <a asp-controller="Perfiles"
+                   asp-action="Create"
+                   class="btn btn-dark w-100"
+                   style="border-radius:999px;">
                     Crear perfil
                 </a>
             </div>
         }
+
     </div>
 </div>
